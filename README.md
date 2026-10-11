@@ -23,3 +23,8 @@ Open `index.html` in any modern browser.
 ## Notes
 - Data does not sync between devices. Use Export backup and Import backup to move it.
 - The Think Labs logo is embedded in the page. Only publish it if you have the right to use it.
+
+## Passcode lock
+Creating a profile also creates a passcode (6 or more characters). The planner asks for it each time you open it in a new browser session.
+- This is a lock on one device, not an online account. The passcode is stored as a salted hash in your browser, and your entries are not encrypted, so it deters casual access but is not strong security.
+- A forgotten passcode cannot be recovered. You can erase the data on that device and start again, or import a backup.
