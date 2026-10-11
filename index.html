@@ -58,10 +58,16 @@ nav button{text-align:left;border-bottom:0;border-left:4px solid transparent;pad
 nav button.on{border-bottom:0;border-left-color:var(--acc);background:#1c1c1c}
 .shell main{flex:1;min-width:0;margin:0;max-width:none}
 @media(max-width:600px){nav{width:84px}nav button{padding:12px 8px;font-size:13px}.shell main{padding:12px}}
+.shell{display:block;max-width:none}
+.shell main{max-width:760px;margin:0 auto;padding:16px}
+nav{position:fixed;left:0;top:0;bottom:0;z-index:40;width:176px;border-radius:0;padding:calc(12px + env(safe-area-inset-top,0px)) 0 12px;overflow-y:auto;transform:translateX(calc(-100% + 14px));transition:transform .2s ease;border-right:4px solid var(--acc)}
+nav:hover,nav.open{transform:translateX(0);box-shadow:4px 0 18px rgba(0,0,0,.35)}
+@media(max-width:600px){nav{width:156px}nav button{padding:12px 10px;font-size:14px}.shell main{padding:12px}}
 </style>
 </head>
 <body>
-<header>
+<header style="position:relative">
+<button id="menu" aria-label="Open menu" style="position:absolute;left:10px;top:10px;background:none;border:1px solid #444;color:#fff;border-radius:8px;width:40px;height:40px;font-size:20px;cursor:pointer">☰</button>
 <div style="text-align:center;padding-bottom:8px"><img class="lg" alt="Think Labs" style="height:48px;width:auto"></div>
 <div class="brand"><b>THE COMPOUNDING EDGE</b><span>Small. Daily. Compounding.</span></div>
 </header>
@@ -118,7 +124,7 @@ nav button.on{border-bottom:0;border-left-color:var(--acc);background:#1c1c1c}
 <div id="setupbody"></div>
 <h3>Backup</h3>
 <div class="card"><p class="sub">Your entries are saved in this browser on this device only. Export a backup file to keep them safe or move them to another device.</p>
-<div class="bar"><button class="b p" id="exp">Export backup</button><button class="b" id="impb">Import backup</button><input type="file" id="imp" accept=".json" hidden><button class="b" id="rst">Erase everything</button></div><div id="bmsg" class="sub"></div></div>
+<div class="bar"><button class="b p" id="exp">Export backup</button><button class="b" id="impb">Import backup</button><input type="file" id="imp" accept=".json" hidden><button class="b" id="rst">Delete my account</button></div><div id="bmsg" class="sub"></div></div>
 </section>
 
 <section id="profile">
@@ -127,7 +133,12 @@ nav button.on{border-bottom:0;border-left-color:var(--acc);background:#1c1c1c}
 <div id="avatar" style="width:72px;height:72px;border-radius:50%;background:var(--line) center/cover;display:grid;place-items:center;font-weight:700;font-size:26px;flex:none"></div>
 <div class="bar" style="margin:0"><button class="b" id="avb">Add photo</button><button class="b" id="avx">Remove</button><input type="file" id="avf" accept="image/*" hidden></div></div>
 <div id="profbody"></div>
-<div class="bar"><button class="b" id="chpw">Change passcode</button></div><div id="pwmsg" class="sub"></div>
+<label class="f">Auto-lock after inactivity</label><select data-k="settings.lockmin"><option value="">5 minutes (default)</option><option value="1">1 minute</option><option value="2">2 minutes</option><option value="10">10 minutes</option><option value="15">15 minutes</option><option value="30">30 minutes</option></select>
+<div class="card" id="pwcard"><b>Change passcode</b>
+<label class="f">Current passcode</label><input type="password" id="pw0" autocomplete="current-password">
+<label class="f">New passcode (6 or more characters)</label><input type="password" id="pw1" autocomplete="new-password">
+<label class="f">Confirm new passcode</label><input type="password" id="pw2" autocomplete="new-password">
+<div class="bar"><button class="b p" id="chpw">Change passcode</button></div><div id="pwmsg" class="sub"></div></div>
 </section>
 
 </main>
@@ -136,33 +147,40 @@ nav button.on{border-bottom:0;border-left-color:var(--acc);background:#1c1c1c}
 <div id="lock" hidden style="position:fixed;inset:0;z-index:60;background:var(--bg);overflow:auto;padding:calc(20px + env(safe-area-inset-top,0px)) 16px 24px">
 <div style="max-width:420px;margin:0 auto">
 <div style="background:#000;color:#fff;padding:14px 16px;border-bottom:4px solid var(--acc);border-radius:10px;text-align:center"><img class="lg" alt="Think Labs" style="height:48px;width:auto"><div style="margin-top:8px"><b>THE COMPOUNDING EDGE</b></div></div>
-<h2 style="margin-top:22px">Welcome back, <span id="lockname"></span></h2>
-<p class="sub">Enter your passcode to open your planner.</p>
-<input type="password" id="lp" autocomplete="current-password">
+<h2 style="margin-top:22px">Log in</h2>
+<p class="sub">Enter your username or email and your passcode.</p>
+<label class="f">Username or email</label><input type="text" id="lu" autocomplete="username">
+<label class="f">Passcode</label><input type="password" id="lp" autocomplete="current-password">
 <p id="lerr" style="color:#b3261e;font-weight:600;margin:10px 0 0"></p>
-<div class="bar" style="justify-content:center;margin-top:16px"><button class="b" id="lgo" style="background:var(--acc);border-color:var(--acc);color:#000;padding:12px 32px">Unlock</button></div>
+<div class="bar" style="justify-content:center;margin-top:16px"><button class="b" id="lgo" style="background:var(--acc);border-color:var(--acc);color:#000;padding:12px 32px">Log in</button></div>
 <p class="sub" style="text-align:center"><a href="#" id="lforgot">Forgot your passcode?</a></p>
+<p class="sub" style="text-align:center"><a href="#" id="tosign">Create a new account</a></p>
 </div></div>
 <div id="gate" hidden style="position:fixed;inset:0;z-index:50;background:var(--bg);overflow:auto;padding:calc(20px + env(safe-area-inset-top,0px)) 16px 24px">
 <div style="max-width:480px;margin:0 auto">
 <div style="background:#000;color:#fff;padding:14px 16px;border-bottom:4px solid var(--acc);border-radius:10px"><div style="text-align:center;margin-bottom:8px"><img class="lg" alt="Think Labs" style="height:48px;width:auto"></div><b>THE COMPOUNDING EDGE</b><div style="color:#bbb;font-size:12px">Small. Daily. Compounding.</div></div>
 <h2 style="margin-top:22px">Create your profile to begin</h2>
-<p class="sub">It takes a minute. Your name and a passcode are required; the rest is optional. Your details stay in this browser.</p>
+<p class="sub">It takes a minute. Your name, a unique username or email, and a passcode are required; the rest is optional. Your details stay in this browser.</p>
 <label class="f">Full name *</label><input type="text" id="gn" autocomplete="name">
+<label class="f">Username or email * (must be unique)</label><input type="text" id="gu" autocomplete="username">
 <label class="f">What I like to be called</label><input type="text" id="gp">
 <label class="f">What I do (role, studies or business)</label><input type="text" id="gr">
 <label class="f">City / country</label><input type="text" id="gl">
 <label class="f">Start date (used to count your days and weeks)</label><input type="date" id="gs" style="width:auto">
 <label class="f">Create a passcode * (6 or more characters)</label><input type="password" id="gpw" autocomplete="new-password">
 <label class="f">Confirm passcode *</label><input type="password" id="gpw2" autocomplete="new-password">
-<p class="sub" style="margin:6px 0 0">This locks the planner on this device. A forgotten passcode cannot be recovered; the only way back in is to erase this device's data.</p>
+<p class="sub" style="margin:6px 0 0">Accounts live on this device only. A forgotten passcode cannot be recovered; the only way back is to erase the account.</p>
 <p id="gerr" style="color:#b3261e;font-weight:600;margin:10px 0 0"></p>
 <div class="bar" style="justify-content:center;margin-top:16px"><button class="b" id="gstart" style="background:var(--acc);border-color:var(--acc);color:#000;padding:12px 32px">Start my planner</button></div>
+<p class="sub" id="glogin" style="text-align:center"><a href="#" id="tologin">Already have an account? Log in</a></p>
 </div></div>
 <script>
 const KEY='compounding-edge-v1';let S={};
-try{S=JSON.parse(localStorage.getItem(KEY)||'{}')}catch(e){S={}}
-const save=()=>{try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}};
+const ACC_KEY='ce-accounts-v1';let ACC={},ME=null,lastIdent='',wantSignup=false;
+const norm=s=>String(s||'').trim().toLowerCase().replace(/\s+/g,' ');
+const reloadAcc=()=>{try{ACC=JSON.parse(localStorage.getItem(ACC_KEY)||'{}')||{}}catch(e){ACC={}}};
+const saveAcc=()=>{try{localStorage.setItem(ACC_KEY,JSON.stringify(ACC))}catch(e){}};
+const save=()=>{if(!ME)return;try{localStorage.setItem('ce-data-'+ME,JSON.stringify(S))}catch(e){}};
 const $=(q,r=document)=>r.querySelector(q),$$=(q,r=document)=>[...r.querySelectorAll(q)];
 const pad=n=>String(n).padStart(2,'0');
 const iso=d=>d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate());
@@ -190,7 +208,7 @@ sb+='<details><summary>My commitment</summary><p class="sub">For as long as thes
 $('#setupbody').innerHTML=sb;
 
 // profile
-$('#profbody').innerHTML=fld('profile.name','Full name')+fld('profile.pref','What I like to be called')+fld('profile.role','What I do (role, studies or business)')+fld('profile.loc','City / country')+fld('profile.about','A little about me','ta')+fld('profile.focus','My main focus right now','ta');
+$('#profbody').innerHTML='<p class="sub" id="whoami"></p>'+fld('profile.name','Full name')+fld('profile.pref','What I like to be called')+fld('profile.role','What I do (role, studies or business)')+fld('profile.loc','City / country')+fld('profile.about','A little about me','ta')+fld('profile.focus','My main focus right now','ta');
 function avatar(){const a=$('#avatar'),im=get('profile.photo'),n=(get('profile.name')||get('profile.pref')||'').trim();a.style.backgroundImage=im?'url("'+im+'")':'none';a.textContent=im?'':(n?n.split(/\s+/).map(w=>w[0]).slice(0,2).join('').toUpperCase():'?');const p=(get('profile.pref')||'').trim()||n.split(/\s+/)[0];$('#hello').textContent=p?'Hi, '+p:''}
 $('#avb').onclick=()=>$('#avf').click();
 $('#avf').onchange=e=>{const f=e.target.files[0];if(!f)return;const r=new FileReader();r.onload=()=>{const i=new Image();i.onload=()=>{const c=document.createElement('canvas');c.width=c.height=160;const s=Math.min(i.width,i.height);c.getContext('2d').drawImage(i,(i.width-s)/2,(i.height-s)/2,s,s,0,0,160,160);set('profile.photo',c.toDataURL('image/jpeg',.8));avatar()};i.src=r.result};r.readAsDataURL(f)};
@@ -207,7 +225,7 @@ function fill(){
  meta()}
 function meta(){
  const st=get('commit.start');
- $('#dd').value=cur;avatar();
+ $('#dd').value=cur;avatar();$('#whoami').textContent=ME&&ACC[ME]?'Signed in as '+ACC[ME].ident:'';
  $('#dayinfo').textContent=st&&cur>=st?`Day ${diff(st,cur)+1} · Week ${Math.floor(diff(mon(st),cur)/7)+1}`:(st?'Before your start date':'Set a start date in Setup to count days');
  let n=0,d=done(cur)?cur:add(cur,-1);while(done(d)&&n<5000){n++;d=add(d,-1)}
  $('#streak').textContent=n?`${n}-day streak`:'No streak yet';
@@ -237,39 +255,79 @@ $('#rd').onchange=e=>{if(e.target.value){rv=e.target.value;fill()}};
 document.addEventListener('click',e=>{const b=e.target.closest('[data-rv]');if(b){rv=b.dataset.rv;fill()}});
 $('#exp').onclick=async()=>{try{const data=JSON.stringify(S,null,2);const dl=(window.claude&&claude.use)?await claude.use('downloads'):null;if(dl)await dl.save({filename:'compounding-edge-backup.json',data});else{const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([data],{type:'application/json'}));a.download='compounding-edge-backup.json';a.click();setTimeout(()=>URL.revokeObjectURL(a.href),1000)}$('#bmsg').textContent='Backup saved.'}catch(e){$('#bmsg').textContent=e&&e.code==='declined'?'Export cancelled.':'Export is not available in this view.'}};
 $('#impb').onclick=()=>$('#imp').click();
-$('#imp').onchange=async e=>{const f=e.target.files[0];if(!f)return;try{const o=JSON.parse(await f.text());if(!o||typeof o!=='object'||Array.isArray(o))throw 0;S=o;save();fill();track();gate();$('#bmsg').textContent='Backup imported.'}catch(x){$('#bmsg').textContent='That file is not a valid backup.'}};
-$('#rst').onclick=()=>{if(confirm('Erase all your entries on this device? Export a backup first if unsure.')){S={};save();fill();track();gate()}};
+$('#imp').onchange=async e=>{const f=e.target.files[0];if(!f)return;try{const o=JSON.parse(await f.text());if(!o||typeof o!=='object'||Array.isArray(o))throw 0;delete o.auth;S=o;save();fill();track();gate();$('#bmsg').textContent='Backup imported.'}catch(x){$('#bmsg').textContent='That file is not a valid backup.'}};
+$('#rst').onclick=()=>{const b=$('#rst');if(b.dataset.arm){delete b.dataset.arm;b.textContent='Delete my account';const id=ME;leave();delete ACC[id];saveAcc();try{localStorage.removeItem('ce-data-'+id)}catch(e){}gate();return}b.dataset.arm=1;b.textContent='Click again to permanently delete this account';setTimeout(()=>{delete b.dataset.arm;b.textContent='Delete my account'},6000)};
 
 // tabs
-const tabs=[['today','Today'],['week','Week'],['tracker','Tracker'],['review','Review'],['setup','Setup'],['profile','Profile'],['lock','🔒 Lock']];
+const tabs=[['today','Today'],['week','Week'],['tracker','Tracker'],['review','Review'],['setup','Setup'],['profile','Profile'],['lock','🔒 Log out']];
 $('#nav').innerHTML=tabs.map(t=>`<button data-t="${t[0]}">${t[1]}</button>`).join('');
 function go(t){if(gate())return;$$('section').forEach(s=>s.classList.toggle('on',s.id===t));$$('nav button').forEach(b=>b.classList.toggle('on',b.dataset.t===t));if(t==='tracker')track();fill();window.scrollTo(0,0)}
-$('#nav').onclick=e=>{const b=e.target.closest('button');if(!b)return;if(b.dataset.t==='lock'){setU(false);gate();return}go(b.dataset.t)};
-const U=()=>{try{return sessionStorage.getItem('ce-u')==='1'}catch(e){return !!window.__u}};
-const setU=v=>{try{v?sessionStorage.setItem('ce-u','1'):sessionStorage.removeItem('ce-u')}catch(e){window.__u=v}};
+$('#nav').onclick=e=>{const b=e.target.closest('button');if(!b)return;if(b.dataset.t==='lock'){leave();gate();$('#nav').classList.remove('open');return}go(b.dataset.t);$('#nav').classList.remove('open')};
+const U=()=>{try{return sessionStorage.getItem('ce-u')||''}catch(e){return window.__u||''}};
+const setU=v=>{try{v?sessionStorage.setItem('ce-u',v):sessionStorage.removeItem('ce-u')}catch(e){window.__u=v}};
 const b64=u=>btoa(String.fromCharCode(...u)),unb64=s=>Uint8Array.from(atob(s),c=>c.charCodeAt(0));
 async function hashPw(pw,salt){if(!(window.crypto&&crypto.subtle))throw new Error('nocrypto');const k=await crypto.subtle.importKey('raw',new TextEncoder().encode(pw),'PBKDF2',false,['deriveBits']);return b64(new Uint8Array(await crypto.subtle.deriveBits({name:'PBKDF2',salt,iterations:150000,hash:'SHA-256'},k,256)))}
-async function setPw(pw){const salt=crypto.getRandomValues(new Uint8Array(16));S.auth={salt:b64(salt),hash:await hashPw(pw,salt)};save()}
-async function checkPw(pw){const a=S.auth;return !!a&&await hashPw(pw,unb64(a.salt))===a.hash}
+async function setPw(pw){const a=ACC[ME],salt=crypto.getRandomValues(new Uint8Array(16));a.salt=b64(salt);a.hash=await hashPw(pw,salt);saveAcc()}
+async function checkPw(pw){const a=ACC[ME];return !!a&&await hashPw(pw,unb64(a.salt))===a.hash}
+function enter(id){ME=id;setU(id);try{S=JSON.parse(localStorage.getItem('ce-data-'+id)||'{}')||{}}catch(e){S={}}}
+function leave(){if(ME&&ACC[ME])lastIdent=ACC[ME].ident;ME=null;setU(null);S={};fill()}
+function boot(){
+ reloadAcc();
+ if(!Object.keys(ACC).length){try{const o=JSON.parse(localStorage.getItem(KEY)||'null'),nm=o&&o.profile&&(o.profile.name||'').trim();if(o&&o.auth&&nm){const id=norm(nm);ACC[id]={id,ident:nm,salt:o.auth.salt,hash:o.auth.hash};saveAcc();delete o.auth;localStorage.setItem('ce-data-'+id,JSON.stringify(o));localStorage.removeItem(KEY)}}catch(e){}}
+ const u=U();if(u&&ACC[u])enter(u);else setU(null)}
 function gate(){
- const hasP=!!(get('profile.name')||'').trim(),need=!hasP||!S.auth,lk=!need&&!U();
- $('#gate').hidden=!need;$('#lock').hidden=!lk;
- if(need){[['gn','profile.name'],['gp','profile.pref'],['gr','profile.role'],['gl','profile.loc']].forEach(([i,k])=>{if(!$('#'+i).value)$('#'+i).value=get(k)||''});if(!$('#gs').value)$('#gs').value=get('commit.start')||today;$('#gn').focus()}
- else if(lk){$('#lockname').textContent=((get('profile.pref')||get('profile.name')||'')+'').trim().split(/\s+/)[0];$('#lp').focus()}
- return need||lk}
+ const has=Object.keys(ACC).length>0,signup=!ME&&(!has||wantSignup),login=!ME&&!signup;
+ $('#gate').hidden=!signup;$('#lock').hidden=!login;$('#glogin').hidden=!has;
+ if(signup){if(!$('#gs').value)$('#gs').value=today;$('#gn').focus()}
+ else if(login){if(!$('#lu').value)$('#lu').value=lastIdent;($('#lu').value?$('#lp'):$('#lu')).focus()}
+ return !ME}
+$('#tologin').onclick=e=>{e.preventDefault();wantSignup=false;gate()};
+$('#tosign').onclick=e=>{e.preventDefault();wantSignup=true;$('#gerr').textContent='';gate()};
 $('#gstart').onclick=async()=>{
- const n=$('#gn').value.trim(),p1=$('#gpw').value,p2=$('#gpw2').value,E=m=>{$('#gerr').textContent=m};
- if(!n)return E('Please enter your name to continue.');
- if(!S.auth){if(p1.length<6)return E('Choose a passcode of at least 6 characters.');if(p1!==p2)return E('The two passcodes do not match.')}
- try{if(!S.auth)await setPw(p1)}catch(e){return E('Passcodes are not supported in this browser or page.')}
- E('');set('profile.name',n);[['gp','profile.pref'],['gr','profile.role'],['gl','profile.loc']].forEach(([i,k])=>{const v=$('#'+i).value.trim();if(v)set(k,v)});
- if($('#gs').value&&!get('commit.start'))set('commit.start',$('#gs').value);
- $('#gpw').value=$('#gpw2').value='';setU(true);gate();go('today')};
-$('#lgo').onclick=async()=>{try{if(await checkPw($('#lp').value)){$('#lp').value='';$('#lerr').textContent='';setU(true);gate();go('today')}else $('#lerr').textContent='That passcode is not correct.'}catch(e){$('#lerr').textContent='Passcodes are not supported in this browser or page.'}};
-$('#lp').onkeydown=e=>{if(e.key==='Enter')$('#lgo').click()};
-$('#lforgot').onclick=e=>{e.preventDefault();if(confirm('A forgotten passcode cannot be recovered. You can erase everything on this device and start again. Your entries will be lost unless you have an exported backup. Erase now?')){S={};save();setU(false);fill();track();gate()}};
-$('#chpw').onclick=async()=>{try{const o=prompt('Enter your current passcode');if(o===null)return;if(!(await checkPw(o))){$('#pwmsg').textContent='Current passcode is not correct.';return}const n=prompt('Enter a new passcode (6 or more characters)');if(n===null)return;if(n.length<6){$('#pwmsg').textContent='New passcode is too short.';return}await setPw(n);$('#pwmsg').textContent='Passcode changed.'}catch(e){$('#pwmsg').textContent='Could not change the passcode here.'}};
+ const n=$('#gn').value.trim(),u=$('#gu').value.trim(),id=norm(u),p1=$('#gpw').value,p2=$('#gpw2').value,E=m=>{$('#gerr').textContent=m};
+ reloadAcc();
+ if(!n)return E('Please enter your full name.');
+ if(id.length<3)return E('Choose a username or email of at least 3 characters.');
+ if(ACC[id])return E('An account with this username or email already exists on this device. Please log in instead.');
+ if(p1.length<6)return E('Choose a passcode of at least 6 characters.');
+ if(p1!==p2)return E('The two passcodes do not match.');
+ let rec;try{const salt=crypto.getRandomValues(new Uint8Array(16));rec={id,ident:u,salt:b64(salt),hash:await hashPw(p1,salt)}}catch(e){return E('Accounts are not supported in this browser or page.')}
+ reloadAcc();if(ACC[id])return E('An account with this username or email already exists on this device. Please log in instead.');
+ E('');ACC[id]=rec;saveAcc();enter(id);set('profile.name',n);
+ [['gp','profile.pref'],['gr','profile.role'],['gl','profile.loc']].forEach(([i,k])=>{const v=$('#'+i).value.trim();if(v)set(k,v)});
+ if($('#gs').value)set('commit.start',$('#gs').value);
+ ['gn','gu','gp','gr','gl','gpw','gpw2'].forEach(i=>{$('#'+i).value=''});wantSignup=false;gate();go('today')};
+let fails=0,until=0;
+$('#lgo').onclick=async()=>{
+ const E=m=>{$('#lerr').textContent=m};
+ if(Date.now()<until)return E('Too many attempts. Wait 30 seconds and try again.');
+ reloadAcc();const id=norm($('#lu').value),a=ACC[id];
+ try{const ok=!!a&&await hashPw($('#lp').value,unb64(a.salt))===a.hash;
+  if(!ok){if(++fails>=5){until=Date.now()+30000;fails=0}return E('Incorrect username or passcode.')}}
+ catch(e){return E('Accounts are not supported in this browser or page.')}
+ fails=0;E('');$('#lp').value='';$('#lu').value='';enter(id);gate();go('today')};
+$('#lp').onkeydown=$('#lu').onkeydown=e=>{if(e.key==='Enter')$('#lgo').click()};
+$('#lforgot').onclick=e=>{e.preventDefault();const a=e.target,id=norm($('#lu').value);
+ if(!ACC[id]){$('#lerr').textContent='Type your username or email above first, then click this again.';return}
+ if(a.dataset.arm){delete a.dataset.arm;a.textContent='Forgot your passcode?';delete ACC[id];saveAcc();try{localStorage.removeItem('ce-data-'+id)}catch(x){}$('#lu').value='';$('#lerr').textContent='';gate();return}
+ a.dataset.arm=1;a.textContent='This permanently erases that account on this device. Click again to confirm.';setTimeout(()=>{delete a.dataset.arm;a.textContent='Forgot your passcode?'},6000)};
+$('#chpw').onclick=async()=>{const M=m=>{$('#pwmsg').textContent=m},o=$('#pw0').value,n=$('#pw1').value,c=$('#pw2').value;
+ if(!o||!n||!c)return M('Fill in all three boxes.');
+ try{if(!(await checkPw(o)))return M('Your current passcode is not correct.');
+  if(n.length<6)return M('The new passcode must be at least 6 characters.');
+  if(n!==c)return M('The two new passcodes do not match.');
+  if(n===o)return M('Choose a new passcode that is different from the current one.');
+  await setPw(n);$('#pw0').value=$('#pw1').value=$('#pw2').value='';M('Passcode changed. Use the new one next time you unlock.')
+ }catch(e){M('Could not change the passcode in this browser or page.')}};
 $$('.lg').forEach(i=>{i.src=$('footer img').src});
+$('#menu').onclick=e=>{e.stopPropagation();$('#nav').classList.toggle('open')};
+document.addEventListener('click',e=>{if(!e.target.closest('#nav'))$('#nav').classList.remove('open')});
+let lastAct=Date.now();
+const lockMs=()=>(+get('settings.lockmin')||5)*60000;
+['pointerdown','pointermove','keydown','scroll','touchstart','input','click'].forEach(ev=>document.addEventListener(ev,()=>{lastAct=Date.now()},{passive:true,capture:true}));
+function idleCheck(){if(U()&&Date.now()-lastAct>lockMs()){leave();gate()}}
+setInterval(idleCheck,10000);document.addEventListener('visibilitychange',idleCheck);
+boot();
 go('today');gate();
 </script>
 </body>
