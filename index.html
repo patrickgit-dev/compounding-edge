@@ -63,6 +63,7 @@ nav button.on{border-bottom:0;border-left-color:var(--acc);background:#1c1c1c}
 nav{position:fixed;left:0;top:0;bottom:0;z-index:40;width:176px;border-radius:0;padding:calc(12px + env(safe-area-inset-top,0px)) 0 12px;overflow-y:auto;transform:translateX(calc(-100% + 14px));transition:transform .2s ease;border-right:4px solid var(--acc)}
 nav:hover,nav.open{transform:translateX(0);box-shadow:4px 0 18px rgba(0,0,0,.35)}
 @media(max-width:600px){nav{width:156px}nav button{padding:12px 10px;font-size:14px}.shell main{padding:12px}}
+a.b{display:inline-block;padding:8px 10px;border:1px solid var(--line);border-radius:8px;color:var(--fg);background:var(--card);font-weight:600;text-decoration:none;cursor:pointer}
 </style>
 </head>
 <body>
@@ -80,6 +81,7 @@ nav:hover,nav.open{transform:translateX(0);box-shadow:4px 0 18px rgba(0,0,0,.35)
 <div class="bar"><button class="b" id="dp">‹</button><input type="date" id="dd" class="grow"><button class="b" id="dn">›</button><button class="b" id="dt">Today</button></div>
 <div class="bar"><span class="chip" id="dayinfo"></span><span class="chip a" id="streak"></span></div>
 <div id="nudge"></div>
+<div id="schedtoday"></div>
 <h3>Today's top 3</h3>
 <div class="card" id="top3"></div>
 <h3>My small actions</h3>
@@ -117,6 +119,24 @@ nav:hover,nav.open{transform:translateX(0);box-shadow:4px 0 18px rgba(0,0,0,.35)
 <h3>Change: how I'll adjust my actions</h3><textarea data-k="reviews.@r.change"></textarea>
 <h3>Does my vision still feel right?</h3><textarea data-k="reviews.@r.vision"></textarea>
 <h3>Carrying forward / next block</h3><textarea data-k="reviews.@r.next"></textarea>
+</section>
+
+<section id="schedule">
+<h2>Schedule</h2><p class="sub">Plan a task or a call ahead of time, then add it to your calendar.</p>
+<div class="card">
+<label class="f">What is it?</label><input type="text" id="st" placeholder="e.g. Weekly review, call with my accountability partner">
+<div class="g2"><div><label class="f">Date</label><input type="date" id="sd"></div><div><label class="f">Start time</label><input type="time" id="stm" value="09:00"></div></div>
+<div class="g2"><div><label class="f">Length</label><select id="sdur"><option value="15">15 minutes</option><option value="30" selected>30 minutes</option><option value="45">45 minutes</option><option value="60">1 hour</option><option value="90">1.5 hours</option><option value="120">2 hours</option></select></div>
+<div><label class="f">Reminder (Apple / Outlook / .ics)</label><select id="srem"><option value="10">10 minutes before</option><option value="30" selected>30 minutes before</option><option value="60">1 hour before</option><option value="1440">1 day before</option></select></div></div>
+<label class="f">Notes (optional)</label><textarea id="sn" style="min-height:48px"></textarea>
+<label class="f">Call link (optional)</label>
+<div class="bar"><input type="text" id="sl" class="grow" placeholder="Paste a Google Meet, Zoom or Teams link"><a class="b" href="https://meet.google.com/new" target="_blank" rel="noopener">Create Google Meet</a></div>
+<p class="sub">"Create Google Meet" opens a new meeting in a new tab (you must be signed in to Google). Copy its link and paste it above.</p>
+<label class="f">Invite by email (optional, separate with commas)</label><input type="text" id="sg">
+<div class="bar"><button class="b" id="sadd" style="background:var(--acc);border-color:var(--acc);color:#000">Save task</button></div><div id="smsg" class="sub"></div>
+</div>
+<h3>Upcoming</h3><div id="slist"></div>
+<h3>Done and past</h3><div id="sdone"></div>
 </section>
 
 <section id="setup">
@@ -225,7 +245,7 @@ function fill(){
  meta()}
 function meta(){
  const st=get('commit.start');
- $('#dd').value=cur;avatar();$('#whoami').textContent=ME&&ACC[ME]?'Signed in as '+ACC[ME].ident:'';
+ $('#dd').value=cur;avatar();soon();$('#whoami').textContent=ME&&ACC[ME]?'Signed in as '+ACC[ME].ident:'';
  $('#dayinfo').textContent=st&&cur>=st?`Day ${diff(st,cur)+1} · Week ${Math.floor(diff(mon(st),cur)/7)+1}`:(st?'Before your start date':'Set a start date in Setup to count days');
  let n=0,d=done(cur)?cur:add(cur,-1);while(done(d)&&n<5000){n++;d=add(d,-1)}
  $('#streak').textContent=n?`${n}-day streak`:'No streak yet';
@@ -253,15 +273,15 @@ $('#wp').onclick=()=>{wk=add(wk,-7);fill()};$('#wn').onclick=()=>{wk=add(wk,7);f
 $('#mo').onchange=e=>{if(e.target.value){mo=e.target.value;track()}};
 $('#rd').onchange=e=>{if(e.target.value){rv=e.target.value;fill()}};
 document.addEventListener('click',e=>{const b=e.target.closest('[data-rv]');if(b){rv=b.dataset.rv;fill()}});
-$('#exp').onclick=async()=>{try{const data=JSON.stringify(S,null,2);const dl=(window.claude&&claude.use)?await claude.use('downloads'):null;if(dl)await dl.save({filename:'compounding-edge-backup.json',data});else{const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([data],{type:'application/json'}));a.download='compounding-edge-backup.json';a.click();setTimeout(()=>URL.revokeObjectURL(a.href),1000)}$('#bmsg').textContent='Backup saved.'}catch(e){$('#bmsg').textContent=e&&e.code==='declined'?'Export cancelled.':'Export is not available in this view.'}};
+$('#exp').onclick=async()=>{try{const dl=await claude.use('downloads');if(!dl)throw 0;await dl.save({filename:'compounding-edge-backup.json',data:JSON.stringify(S,null,2)});$('#bmsg').textContent='Backup saved.'}catch(e){$('#bmsg').textContent=e&&e.code==='declined'?'Export cancelled.':'Export is not available in this view.'}};
 $('#impb').onclick=()=>$('#imp').click();
 $('#imp').onchange=async e=>{const f=e.target.files[0];if(!f)return;try{const o=JSON.parse(await f.text());if(!o||typeof o!=='object'||Array.isArray(o))throw 0;delete o.auth;S=o;save();fill();track();gate();$('#bmsg').textContent='Backup imported.'}catch(x){$('#bmsg').textContent='That file is not a valid backup.'}};
 $('#rst').onclick=()=>{const b=$('#rst');if(b.dataset.arm){delete b.dataset.arm;b.textContent='Delete my account';const id=ME;leave();delete ACC[id];saveAcc();try{localStorage.removeItem('ce-data-'+id)}catch(e){}gate();return}b.dataset.arm=1;b.textContent='Click again to permanently delete this account';setTimeout(()=>{delete b.dataset.arm;b.textContent='Delete my account'},6000)};
 
 // tabs
-const tabs=[['today','Today'],['week','Week'],['tracker','Tracker'],['review','Review'],['setup','Setup'],['profile','Profile'],['lock','🔒 Log out']];
+const tabs=[['today','Today'],['week','Week'],['tracker','Tracker'],['review','Review'],['schedule','Schedule'],['setup','Setup'],['profile','Profile'],['lock','🔒 Log out']];
 $('#nav').innerHTML=tabs.map(t=>`<button data-t="${t[0]}">${t[1]}</button>`).join('');
-function go(t){if(gate())return;$$('section').forEach(s=>s.classList.toggle('on',s.id===t));$$('nav button').forEach(b=>b.classList.toggle('on',b.dataset.t===t));if(t==='tracker')track();fill();window.scrollTo(0,0)}
+function go(t){if(gate())return;$$('section').forEach(s=>s.classList.toggle('on',s.id===t));$$('nav button').forEach(b=>b.classList.toggle('on',b.dataset.t===t));if(t==='tracker')track();if(t==='schedule')sched();fill();window.scrollTo(0,0)}
 $('#nav').onclick=e=>{const b=e.target.closest('button');if(!b)return;if(b.dataset.t==='lock'){leave();gate();$('#nav').classList.remove('open');return}go(b.dataset.t);$('#nav').classList.remove('open')};
 const U=()=>{try{return sessionStorage.getItem('ce-u')||''}catch(e){return window.__u||''}};
 const setU=v=>{try{v?sessionStorage.setItem('ce-u',v):sessionStorage.removeItem('ce-u')}catch(e){window.__u=v}};
@@ -320,6 +340,44 @@ $('#chpw').onclick=async()=>{const M=m=>{$('#pwmsg').textContent=m},o=$('#pw0').
   await setPw(n);$('#pw0').value=$('#pw1').value=$('#pw2').value='';M('Passcode changed. Use the new one next time you unlock.')
  }catch(e){M('Could not change the passcode in this browser or page.')}};
 $$('.lg').forEach(i=>{i.src=$('footer img').src});
+// ---- schedule and calendar
+const dtl=d=>d.getFullYear()+pad(d.getMonth()+1)+pad(d.getDate())+'T'+pad(d.getHours())+pad(d.getMinutes())+'00';
+const dtiso=d=>d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate())+'T'+pad(d.getHours())+':'+pad(d.getMinutes())+':00';
+const tstart=t=>{const[y,m,dd]=t.date.split('-').map(Number),[h,mi]=t.time.split(':').map(Number);return new Date(y,m-1,dd,h,mi)};
+const tend=t=>new Date(tstart(t).getTime()+(+t.dur||30)*60000);
+const enc=encodeURIComponent;
+const det=t=>[t.notes,t.link?'Join: '+t.link:'','Planned in The Compounding Edge'].filter(Boolean).join('\n\n');
+const gcal=t=>'https://calendar.google.com/calendar/render?action=TEMPLATE&text='+enc(t.title)+'&dates='+dtl(tstart(t))+'/'+dtl(tend(t))+'&details='+enc(det(t))+(t.link?'&location='+enc(t.link):'')+(t.guests?'&add='+enc(t.guests):'');
+const ocal=t=>'https://outlook.live.com/calendar/0/deeplink/compose?path='+enc('/calendar/action/compose')+'&rru=addevent&subject='+enc(t.title)+'&startdt='+enc(dtiso(tstart(t)))+'&enddt='+enc(dtiso(tend(t)))+'&body='+enc(det(t))+(t.link?'&location='+enc(t.link):'');
+const ics_esc=s=>String(s||'').replace(/\\/g,'\\\\').replace(/;/g,'\\;').replace(/,/g,'\\,').replace(/\r?\n/g,'\\n');
+const fold=l=>l.replace(/(.{73})(?=.)/g,'$1\r\n ');
+function ics(t,id){const n=new Date(),z=n.getUTCFullYear()+pad(n.getUTCMonth()+1)+pad(n.getUTCDate())+'T'+pad(n.getUTCHours())+pad(n.getUTCMinutes())+pad(n.getUTCSeconds())+'Z';
+ const g=(t.guests||'').split(',').map(x=>x.trim()).filter(Boolean).map(x=>'ATTENDEE;RSVP=TRUE:mailto:'+x);
+ return ['BEGIN:VCALENDAR','VERSION:2.0','PRODID:-//The Compounding Edge//EN','CALSCALE:GREGORIAN','METHOD:PUBLISH','BEGIN:VEVENT','UID:'+id+'@compounding-edge','DTSTAMP:'+z,'DTSTART:'+dtl(tstart(t)),'DTEND:'+dtl(tend(t)),'SUMMARY:'+ics_esc(t.title),'DESCRIPTION:'+ics_esc(det(t)),...(t.link?['LOCATION:'+ics_esc(t.link),'URL:'+t.link]:[]),...g,'BEGIN:VALARM','ACTION:DISPLAY','DESCRIPTION:'+ics_esc(t.title),'TRIGGER:-PT'+(+t.rem||30)+'M','END:VALARM','END:VEVENT','END:VCALENDAR'].map(fold).join('\r\n')+'\r\n'}
+function tcard(i,t){const s=tstart(t);return `<div class="card"><label class="row" style="border:0;padding:0"><input type="checkbox" data-done="${i}"${t.done?' checked':''}><span><b>${esc(t.title)}</b><small>${esc(s.toLocaleDateString(undefined,{weekday:'short',day:'numeric',month:'short'}))}, ${esc(s.toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'}))} · ${esc(t.dur)} min${t.link?' · <a href="'+esc(t.link)+'" target="_blank" rel="noopener">Join call</a>':''}</small>${t.notes?'<small>'+esc(t.notes)+'</small>':''}</span></label><div class="bar"><a class="b" target="_blank" rel="noopener" href="${esc(gcal(t))}">Google Calendar</a><a class="b" target="_blank" rel="noopener" href="${esc(ocal(t))}">Outlook</a><button class="b" data-ics="${i}">Apple / .ics</button><button class="b" data-del="${i}">Delete</button></div></div>`}
+function sched(){const T=S.tasks||{},now=new Date(),ids=Object.keys(T);
+ const up=ids.filter(i=>!T[i].done&&tend(T[i])>=now).sort((a,b)=>tstart(T[a])-tstart(T[b]));
+ const dn=ids.filter(i=>!up.includes(i)).sort((a,b)=>tstart(T[b])-tstart(T[a]));
+ $('#slist').innerHTML=up.length?up.map(i=>tcard(i,T[i])).join(''):'<p class="sub">Nothing scheduled yet.</p>';
+ $('#sdone').innerHTML=dn.length?dn.map(i=>tcard(i,T[i])).join(''):'<p class="sub">Nothing here yet.</p>'}
+function soon(){const T=S.tasks||{},now=new Date(),td=iso(now);
+ const list=Object.keys(T).filter(i=>T[i].date===cur&&!T[i].done).sort((a,b)=>T[a].time.localeCompare(T[b].time));
+ $('#schedtoday').innerHTML=list.length?'<h3>Scheduled</h3><div class="card">'+list.map(i=>{const t=T[i],m=Math.round((tstart(t)-now)/60000),f=(cur===td&&m>=0&&m<=15)?' <span class="chip a">starts in '+m+' min</span>':'';return '<div class="row"><span><b>'+esc(t.time)+'</b> '+esc(t.title)+f+(t.link?' · <a href="'+esc(t.link)+'" target="_blank" rel="noopener">Join call</a>':'')+'</span></div>'}).join('')+'</div>':''}
+$('#sd').value=today;
+$('#sadd').onclick=()=>{const M=m=>{$('#smsg').textContent=m},title=$('#st').value.trim(),date=$('#sd').value,time=$('#stm').value,link=$('#sl').value.trim();
+ if(!title)return M('Give the task a name.');if(!date||!time)return M('Choose a date and a start time.');
+ if(link&&!/^https?:\/\/\S+$/i.test(link))return M('Paste the full call link, starting with https://');
+ const guests=$('#sg').value.split(',').map(x=>x.trim()).filter(Boolean);
+ if(guests.some(x=>!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(x)))return M('One of the email addresses does not look right.');
+ const id='t'+Date.now().toString(36);set('tasks.'+id,{title,date,time,dur:$('#sdur').value,rem:$('#srem').value,notes:$('#sn').value.trim(),link,guests:guests.join(','),done:false});
+ ['st','sn','sl','sg'].forEach(i=>{$('#'+i).value=''});M('Saved. Add it to your calendar below.');sched();soon()};
+document.addEventListener('click',async e=>{
+ const dl=e.target.closest('[data-del]');if(dl){const T=S.tasks||{};delete T[dl.dataset.del];save();sched();soon();return}
+ const ic=e.target.closest('[data-ics]');if(!ic)return;const id=ic.dataset.ics,t=(S.tasks||{})[id];if(!t)return;
+ const data=ics(t,id),fn=(t.title.replace(/[^\w]+/g,'-').replace(/^-|-$/g,'').slice(0,40)||'task')+'.ics';
+ try{const d=(window.claude&&claude.use)?await claude.use('downloads'):null;if(d)await d.save({filename:fn,data});else{const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([data],{type:'text/calendar'}));a.download=fn;a.click();setTimeout(()=>URL.revokeObjectURL(a.href),1000)}}catch(x){}});
+document.addEventListener('change',e=>{const c=e.target.closest('[data-done]');if(!c)return;const t=(S.tasks||{})[c.dataset.done];if(t){t.done=c.checked;save();sched();soon()}});
+setInterval(soon,30000);
 $('#menu').onclick=e=>{e.stopPropagation();$('#nav').classList.toggle('open')};
 document.addEventListener('click',e=>{if(!e.target.closest('#nav'))$('#nav').classList.remove('open')});
 let lastAct=Date.now();
